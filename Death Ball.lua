@@ -66,7 +66,7 @@ local function Start(Ball)
                     
                     --
                     if Velocity > 0.05 and Velocity < 500 then
-                        if (Distance / Velocity) <= 5.5 then
+                        if (Distance / Velocity) <= 6.5 then
                             Parry()
                         end
                     end
