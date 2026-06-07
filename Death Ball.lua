@@ -1,3 +1,6 @@
+local runService = game:GetService("RunService")
+local player = game:GetService("Players").LocalPlayer
+
 local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local UserInputService = game:GetService("UserInputService")
@@ -12,6 +15,10 @@ local MenuVisible = true
 local ToggleKey = Enum.KeyCode.R
 local WaitingForBind = false
 
+-- ==================== НАЛАШТУВАННЯ ШВИДКОСТІ ====================
+local SpeedEnabled = true
+local PushForce = 0.5
+-- ============================================================
 
 local function Notify(title, text)
     pcall(function()
@@ -31,9 +38,10 @@ ScreenGui.DisplayOrder = 999999
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = CoreGui
 
+-- Збільшив висоту меню, щоб усе влізло
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
-MainFrame.Size = UDim2.new(0, 190, 0, 155)
+MainFrame.Size = UDim2.new(0, 190, 0, 205)  -- Було 155, тепер 205
 MainFrame.Position = UDim2.new(0.5, -95, 0.35, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
 MainFrame.BorderSizePixel = 0
@@ -136,6 +144,61 @@ PlusBtn.TextSize = 20
 PlusBtn.Font = Enum.Font.GothamBold
 PlusBtn.Parent = MainFrame
 
+-- ==================== НОВЕ: НАЛАШТУВАННЯ ШВИДКОСТІ В МЕНЮ ====================
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(1, -20, 0, 18)
+SpeedLabel.Position = UDim2.new(0, 10, 0, 152)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "Speed: 0.5"
+SpeedLabel.TextColor3 = Color3.fromRGB(255, 200, 220)
+SpeedLabel.TextSize = 14
+SpeedLabel.Font = Enum.Font.GothamSemibold
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.Parent = MainFrame
+
+local SpeedMinusBtn = Instance.new("TextButton")
+SpeedMinusBtn.Size = UDim2.new(0, 40, 0, 28)
+SpeedMinusBtn.Position = UDim2.new(0, 15, 0, 176)
+SpeedMinusBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+SpeedMinusBtn.Text = "-"
+SpeedMinusBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+SpeedMinusBtn.TextSize = 20
+SpeedMinusBtn.Font = Enum.Font.GothamBold
+SpeedMinusBtn.Parent = MainFrame
+
+local SpeedPlusBtn = Instance.new("TextButton")
+SpeedPlusBtn.Size = UDim2.new(0, 40, 0, 28)
+SpeedPlusBtn.Position = UDim2.new(1, -55, 0, 176)
+SpeedPlusBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+SpeedPlusBtn.Text = "+"
+SpeedPlusBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+SpeedPlusBtn.TextSize = 20
+SpeedPlusBtn.Font = Enum.Font.GothamBold
+SpeedPlusBtn.Parent = MainFrame
+
+local SpeedToggleFrame = Instance.new("Frame")
+SpeedToggleFrame.Size = UDim2.new(0, 36, 0, 18)
+SpeedToggleFrame.Position = UDim2.new(1, -48, 0, 152)
+SpeedToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+SpeedToggleFrame.BorderSizePixel = 0
+SpeedToggleFrame.Parent = MainFrame
+
+local SpeedToggleCorner = Instance.new("UICorner")
+SpeedToggleCorner.CornerRadius = UDim.new(1, 0)
+SpeedToggleCorner.Parent = SpeedToggleFrame
+
+local SpeedToggleCircle = Instance.new("Frame")
+SpeedToggleCircle.Size = UDim2.new(0, 14, 0, 14)
+SpeedToggleCircle.Position = UDim2.new(0, 2, 0.5, -7)
+SpeedToggleCircle.BackgroundColor3 = Color3.fromRGB(220, 220, 230)
+SpeedToggleCircle.BorderSizePixel = 0
+SpeedToggleCircle.Parent = SpeedToggleFrame
+
+local SpeedToggleCircleCorner = Instance.new("UICorner")
+SpeedToggleCircleCorner.CornerRadius = UDim.new(1, 0)
+SpeedToggleCircleCorner.Parent = SpeedToggleCircle
+-- =====================================================================
+
 local function StyleButton(btn)
     local s = Instance.new("UIStroke")
     s.Thickness = 1.5
@@ -150,9 +213,15 @@ end
 
 StyleButton(MinusBtn)
 StyleButton(PlusBtn)
+StyleButton(SpeedMinusBtn)
+StyleButton(SpeedPlusBtn)
 
 local function UpdateDistanceLabel()
     DistanceLabel.Text = string.format("Distance: %.1f", DistanceThreshold)
+end
+
+local function UpdateSpeedLabel()
+    SpeedLabel.Text = string.format("Speed: %.1f", PushForce)
 end
 
 local function UpdateBindLabel()
@@ -160,6 +229,7 @@ local function UpdateBindLabel()
 end
 
 
+-- Старі кнопки Distance
 MinusBtn.MouseButton1Click:Connect(function()
     DistanceThreshold = math.max(1, DistanceThreshold - 0.1)
     UpdateDistanceLabel()
@@ -170,6 +240,35 @@ PlusBtn.MouseButton1Click:Connect(function()
     UpdateDistanceLabel()
 end)
 
+-- Нові кнопки Speed
+SpeedMinusBtn.MouseButton1Click:Connect(function()
+    PushForce = math.max(0.1, PushForce - 0.1)
+    UpdateSpeedLabel()
+end)
+
+SpeedPlusBtn.MouseButton1Click:Connect(function()
+    PushForce = PushForce + 0.1
+    UpdateSpeedLabel()
+end)
+
+-- Toggle для швидкості
+local function UpdateSpeedToggle()
+    if SpeedEnabled then
+        SpeedToggleFrame.BackgroundColor3 = Color3.fromRGB(255, 60, 150)
+        SpeedToggleCircle.Position = UDim2.new(0, 20, 0.5, -7)
+    else
+        SpeedToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        SpeedToggleCircle.Position = UDim2.new(0, 2, 0.5, -7)
+    end
+end
+
+SpeedToggleFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        SpeedEnabled = not SpeedEnabled
+        UpdateSpeedToggle()
+        Notify("vvil_NIX", SpeedEnabled and "Speed ON" or "Speed OFF")
+    end
+end)
 
 BindLabel.MouseButton1Click:Connect(function()
     WaitingForBind = true
@@ -201,6 +300,7 @@ CircleCorner.CornerRadius = UDim.new(1, 0)
 CircleCorner.Parent = ToggleCircle
 
 
+-- (весь старий код з курсором, драгуванням, Is_Target, Parry, Start і т.д. залишається без змін)
 local CursorFolder = Instance.new("Folder")
 CursorFolder.Name = "CustomCursor"
 CursorFolder.Parent = ScreenGui
@@ -409,7 +509,24 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+-- ==================== ФУНКЦІЯ ШВИДКОСТІ ====================
+runService.Heartbeat:Connect(function()
+    if not SpeedEnabled then return end
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+        local hrp = char.HumanoidRootPart
+        local hum = char.Humanoid
+        
+        if hum.MoveDirection.Magnitude > 0 then
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * PushForce)
+        end
+    end
+end)
+-- ============================================================
+
 UpdateToggle()
 UpdateDistanceLabel()
+UpdateSpeedLabel()
 UpdateBindLabel()
+UpdateSpeedToggle()
 Notify("")
