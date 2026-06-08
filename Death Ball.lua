@@ -7,18 +7,27 @@ local UserInputService = game:GetService("UserInputService")
 local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
 
 local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local Is_Enabled = true
 local DistanceThreshold = 6.5
+local OriginalDistance = 6.5  
 local MenuVisible = true
 local ToggleKey = Enum.KeyCode.R
 local WaitingForBind = false
 
--- ==================== НАЛАШТУВАННЯ ШВИДКОСТІ ====================
+
 local SpeedEnabled = true
 local PushForce = 0.5
--- ============================================================
+
+local NoclipEnabled = false
+local NoclipConnection = nil
+
+local TeleportEnabled = false
+local TeleportConnection = nil
+local TargetPosition = Vector3.new(721.1123657225652, 328.289306640625, 1476.4405517578125)
+
 
 local function Notify(title, text)
     pcall(function()
@@ -30,7 +39,6 @@ local function Notify(title, text)
     end)
 end
 
-
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AutoParryMenu"
 ScreenGui.ResetOnSpawn = false
@@ -38,12 +46,13 @@ ScreenGui.DisplayOrder = 999999
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = CoreGui
 
--- Збільшив висоту меню, щоб усе влізло
+
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
-MainFrame.Size = UDim2.new(0, 190, 0, 205)  -- Було 155, тепер 205
+MainFrame.Size = UDim2.new(0, 190, 0, 400)
 MainFrame.Position = UDim2.new(0.5, -95, 0.35, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+MainFrame.BackgroundTransparency = 0.5
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
@@ -56,7 +65,6 @@ Stroke.Parent = MainFrame
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 12)
 UICorner.Parent = MainFrame
-
 
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 28)
@@ -78,7 +86,6 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.Parent = TitleBar
 
-
 local Status = Instance.new("TextLabel")
 Status.Size = UDim2.new(1, -20, 0, 18)
 Status.Position = UDim2.new(0, 10, 0, 36)
@@ -89,7 +96,6 @@ Status.TextSize = 13
 Status.Font = Enum.Font.GothamSemibold
 Status.TextXAlignment = Enum.TextXAlignment.Left
 Status.Parent = MainFrame
-
 
 local BindLabel = Instance.new("TextButton")
 BindLabel.Size = UDim2.new(1, -20, 0, 28)
@@ -111,7 +117,6 @@ local BindCorner = Instance.new("UICorner")
 BindCorner.CornerRadius = UDim.new(0, 8)
 BindCorner.Parent = BindLabel
 
-
 local DistanceLabel = Instance.new("TextLabel")
 DistanceLabel.Size = UDim2.new(1, -20, 0, 18)
 DistanceLabel.Position = UDim2.new(0, 10, 0, 94)
@@ -122,7 +127,6 @@ DistanceLabel.TextSize = 14
 DistanceLabel.Font = Enum.Font.GothamSemibold
 DistanceLabel.TextXAlignment = Enum.TextXAlignment.Left
 DistanceLabel.Parent = MainFrame
-
 
 local MinusBtn = Instance.new("TextButton")
 MinusBtn.Size = UDim2.new(0, 40, 0, 28)
@@ -144,7 +148,7 @@ PlusBtn.TextSize = 20
 PlusBtn.Font = Enum.Font.GothamBold
 PlusBtn.Parent = MainFrame
 
--- ==================== НОВЕ: НАЛАШТУВАННЯ ШВИДКОСТІ В МЕНЮ ====================
+
 local SpeedLabel = Instance.new("TextLabel")
 SpeedLabel.Size = UDim2.new(1, -20, 0, 18)
 SpeedLabel.Position = UDim2.new(0, 10, 0, 152)
@@ -197,7 +201,80 @@ SpeedToggleCircle.Parent = SpeedToggleFrame
 local SpeedToggleCircleCorner = Instance.new("UICorner")
 SpeedToggleCircleCorner.CornerRadius = UDim.new(1, 0)
 SpeedToggleCircleCorner.Parent = SpeedToggleCircle
--- =====================================================================
+
+
+local TimeLabel = Instance.new("TextLabel")
+TimeLabel.Size = UDim2.new(1, -20, 0, 18)
+TimeLabel.Position = UDim2.new(0, 10, 0, 210)
+TimeLabel.BackgroundTransparency = 1
+TimeLabel.Text = "Time of Day"
+TimeLabel.TextColor3 = Color3.fromRGB(255, 200, 220)
+TimeLabel.TextSize = 14
+TimeLabel.Font = Enum.Font.GothamSemibold
+TimeLabel.TextXAlignment = Enum.TextXAlignment.Left
+TimeLabel.Parent = MainFrame
+
+local DayBtn = Instance.new("TextButton")
+DayBtn.Size = UDim2.new(0, 75, 0, 28)
+DayBtn.Position = UDim2.new(0, 15, 0, 234)
+DayBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+DayBtn.Text = "Day"
+DayBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+DayBtn.TextSize = 16
+DayBtn.Font = Enum.Font.GothamBold
+DayBtn.Parent = MainFrame
+
+local NightBtn = Instance.new("TextButton")
+NightBtn.Size = UDim2.new(0, 75, 0, 28)
+NightBtn.Position = UDim2.new(1, -90, 0, 234)
+NightBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+NightBtn.Text = "Night"
+NightBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+NightBtn.TextSize = 16
+NightBtn.Font = Enum.Font.GothamBold
+NightBtn.Parent = MainFrame
+
+local NoclipLabel = Instance.new("TextLabel")
+NoclipLabel.Size = UDim2.new(1, -20, 0, 18)
+NoclipLabel.Position = UDim2.new(0, 10, 0, 268)
+NoclipLabel.BackgroundTransparency = 1
+NoclipLabel.Text = "NoClip"
+NoclipLabel.TextColor3 = Color3.fromRGB(255, 200, 220)
+NoclipLabel.TextSize = 14
+NoclipLabel.Font = Enum.Font.GothamSemibold
+NoclipLabel.TextXAlignment = Enum.TextXAlignment.Left
+NoclipLabel.Parent = MainFrame
+
+local NoclipBtn = Instance.new("TextButton")
+NoclipBtn.Size = UDim2.new(0, 160, 0, 28)
+NoclipBtn.Position = UDim2.new(0, 15, 0, 292)
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+NoclipBtn.Text = "NoClip OFF"
+NoclipBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+NoclipBtn.TextSize = 16
+NoclipBtn.Font = Enum.Font.GothamBold
+NoclipBtn.Parent = MainFrame
+
+local FarmLabel = Instance.new("TextLabel")
+FarmLabel.Size = UDim2.new(1, -20, 0, 18)
+FarmLabel.Position = UDim2.new(0, 10, 0, 326)
+FarmLabel.BackgroundTransparency = 1
+FarmLabel.Text = "Auto Farm Boss"
+FarmLabel.TextColor3 = Color3.fromRGB(255, 200, 220)
+FarmLabel.TextSize = 14
+FarmLabel.Font = Enum.Font.GothamSemibold
+FarmLabel.TextXAlignment = Enum.TextXAlignment.Left
+FarmLabel.Parent = MainFrame
+
+local FarmBtn = Instance.new("TextButton")
+FarmBtn.Size = UDim2.new(0, 160, 0, 28)
+FarmBtn.Position = UDim2.new(0, 15, 0, 350)
+FarmBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+FarmBtn.Text = "Farm OFF"
+FarmBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+FarmBtn.TextSize = 16
+FarmBtn.Font = Enum.Font.GothamBold
+FarmBtn.Parent = MainFrame
 
 local function StyleButton(btn)
     local s = Instance.new("UIStroke")
@@ -215,6 +292,11 @@ StyleButton(MinusBtn)
 StyleButton(PlusBtn)
 StyleButton(SpeedMinusBtn)
 StyleButton(SpeedPlusBtn)
+StyleButton(DayBtn)
+StyleButton(NightBtn)
+StyleButton(NoclipBtn)
+StyleButton(FarmBtn)
+StyleButton(BindLabel)
 
 local function UpdateDistanceLabel()
     DistanceLabel.Text = string.format("Distance: %.1f", DistanceThreshold)
@@ -228,8 +310,68 @@ local function UpdateBindLabel()
     BindLabel.Text = "Toggle Key: " .. ToggleKey.Name
 end
 
+local function UpdateNoclipLabel()
+    NoclipBtn.Text = NoclipEnabled and "NoClip ON" or "NoClip OFF"
+    NoclipBtn.TextColor3 = NoclipEnabled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 120, 190)
+end
 
--- Старі кнопки Distance
+local function UpdateFarmLabel()
+    FarmBtn.Text = TeleportEnabled and "Farm ON" or "Farm OFF"
+    FarmBtn.TextColor3 = TeleportEnabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 120, 190)
+end
+
+
+local function CreatePlatform(pos)
+    local platform = Instance.new("Part")
+    platform.Name = "TempPlatform"
+    platform.Size = Vector3.new(12, 1, 12)
+    platform.Position = pos - Vector3.new(0, 3.5, 0)
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Transparency = 0.4
+    platform.Color = Color3.fromRGB(255, 120, 190)
+    platform.Material = Enum.Material.Neon
+    platform.Parent = workspace
+    
+    task.delay(1.5, function()
+        if platform and platform.Parent then platform:Destroy() end
+    end)
+end
+
+
+local function ToggleFarm()
+    TeleportEnabled = not TeleportEnabled
+    
+    if TeleportEnabled then
+        OriginalDistance = DistanceThreshold          
+        DistanceThreshold = 9.5                       
+        UpdateDistanceLabel()
+        
+        TeleportConnection = RunService.Heartbeat:Connect(function()
+            if TeleportEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                hrp.CFrame = CFrame.new(TargetPosition + Vector3.new(0, 4, 0))
+                CreatePlatform(TargetPosition)
+            end
+        end)
+        Notify("vvil_NIX", "Auto Farm Boss ON (Distance: 9.5)")
+    else
+        DistanceThreshold = OriginalDistance          
+        UpdateDistanceLabel()
+        
+        if TeleportConnection then
+            TeleportConnection:Disconnect()
+            TeleportConnection = nil
+        end
+        Notify("vvil_NIX", "Auto Farm Boss OFF")
+    end
+    UpdateFarmLabel()
+end
+
+FarmBtn.MouseButton1Click:Connect(ToggleFarm)
+
+
+
 MinusBtn.MouseButton1Click:Connect(function()
     DistanceThreshold = math.max(1, DistanceThreshold - 0.1)
     UpdateDistanceLabel()
@@ -240,7 +382,6 @@ PlusBtn.MouseButton1Click:Connect(function()
     UpdateDistanceLabel()
 end)
 
--- Нові кнопки Speed
 SpeedMinusBtn.MouseButton1Click:Connect(function()
     PushForce = math.max(0.1, PushForce - 0.1)
     UpdateSpeedLabel()
@@ -251,7 +392,6 @@ SpeedPlusBtn.MouseButton1Click:Connect(function()
     UpdateSpeedLabel()
 end)
 
--- Toggle для швидкості
 local function UpdateSpeedToggle()
     if SpeedEnabled then
         SpeedToggleFrame.BackgroundColor3 = Color3.fromRGB(255, 60, 150)
@@ -270,9 +410,54 @@ SpeedToggleFrame.InputBegan:Connect(function(input)
     end
 end)
 
+local function ToggleNoclip()
+    NoclipEnabled = not NoclipEnabled
+    if NoclipEnabled then
+        NoclipConnection = RunService.Stepped:Connect(function()
+            if player.Character then
+                for _, part in ipairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide == true then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+        Notify("vvil_NIX", "NoClip Enabled")
+    else
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+        Notify("vvil_NIX", "NoClip Disabled")
+    end
+    UpdateNoclipLabel()
+end
+
+NoclipBtn.MouseButton1Click:Connect(ToggleNoclip)
+
+DayBtn.MouseButton1Click:Connect(function()
+    Lighting.ClockTime = 14
+    Lighting.Brightness = 2
+    Lighting.Ambient = Color3.fromRGB(200, 200, 200)
+    Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+    Lighting.FogEnd = 100000
+    Lighting.GlobalShadows = true
+    Notify("vvil_NIX", "Set to Day")
+end)
+
+NightBtn.MouseButton1Click:Connect(function()
+    Lighting.ClockTime = 2.5
+    Lighting.Brightness = 0.4
+    Lighting.Ambient = Color3.fromRGB(40, 45, 70)
+    Lighting.OutdoorAmbient = Color3.fromRGB(35, 40, 65)
+    Lighting.FogEnd = 100000
+    Lighting.GlobalShadows = true
+    Notify("vvil_NIX", "Set to Night")
+end)
+
 BindLabel.MouseButton1Click:Connect(function()
     WaitingForBind = true
-    BindLabel.Text = "Натисни нову клавішу..."
+    BindLabel.Text = "Press new key..."
     BindLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 end)
 
@@ -299,8 +484,6 @@ local CircleCorner = Instance.new("UICorner")
 CircleCorner.CornerRadius = UDim.new(1, 0)
 CircleCorner.Parent = ToggleCircle
 
-
--- (весь старий код з курсором, драгуванням, Is_Target, Parry, Start і т.д. залишається без змін)
 local CursorFolder = Instance.new("Folder")
 CursorFolder.Name = "CustomCursor"
 CursorFolder.Parent = ScreenGui
@@ -365,7 +548,6 @@ end
 MainFrame.MouseEnter:Connect(ShowCustomCursor)
 MainFrame.MouseLeave:Connect(HideCustomCursor)
 
-
 local function UpdateToggle()
     if Is_Enabled then
         Status.Text = "Auto Parry ON"
@@ -387,7 +569,6 @@ ToggleFrame.InputBegan:Connect(function(input)
         Notify("vvil_NIX", Is_Enabled and "Auto Parry ON" or "Auto Parry OFF")
     end
 end)
-
 
 local dragging = false
 local dragStart, startPos
@@ -412,7 +593,6 @@ UserInputService.InputEnded:Connect(function(input)
         dragging = false
     end
 end)
-
 
 local function Is_Target()
     if not Is_Enabled then return false end
@@ -502,31 +682,31 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         MenuVisible = not MenuVisible
         MainFrame.Visible = MenuVisible
         if MenuVisible then
-            Notify("vvil_NIX", "Меню увімкнено")
+            Notify("vvil_NIX", "Menu Enabled")
         else
-            Notify("vvil_NIX", "Меню вимкнено (X - повернути)")
+            Notify("vvil_NIX", "Menu Disabled (X to show)")
         end
     end
 end)
 
--- ==================== ФУНКЦІЯ ШВИДКОСТІ ====================
 runService.Heartbeat:Connect(function()
     if not SpeedEnabled then return end
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
         local hrp = char.HumanoidRootPart
         local hum = char.Humanoid
-        
         if hum.MoveDirection.Magnitude > 0 then
             hrp.CFrame = hrp.CFrame + (hum.MoveDirection * PushForce)
         end
     end
 end)
--- ============================================================
+
 
 UpdateToggle()
 UpdateDistanceLabel()
 UpdateSpeedLabel()
 UpdateBindLabel()
 UpdateSpeedToggle()
+UpdateNoclipLabel()
+UpdateFarmLabel()
 Notify("")
