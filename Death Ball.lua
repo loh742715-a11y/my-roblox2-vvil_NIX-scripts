@@ -8,6 +8,7 @@ local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
 
 local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local Is_Enabled = true
@@ -16,7 +17,6 @@ local OriginalDistance = 6.5
 local MenuVisible = true
 local ToggleKey = Enum.KeyCode.R
 local WaitingForBind = false
-
 
 local SpeedEnabled = true
 local PushForce = 0.5
@@ -27,7 +27,6 @@ local NoclipConnection = nil
 local TeleportEnabled = false
 local TeleportConnection = nil
 local TargetPosition = Vector3.new(721.1123657225652, 328.289306640625, 1476.4405517578125)
-
 
 local function Notify(title, text)
     pcall(function()
@@ -46,11 +45,10 @@ ScreenGui.DisplayOrder = 999999
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = CoreGui
 
-
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
-MainFrame.Size = UDim2.new(0, 190, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -95, 0.35, 0)
+MainFrame.Size = UDim2.new(0, 400, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -230, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
 MainFrame.BackgroundTransparency = 0.5
 MainFrame.BorderSizePixel = 0
@@ -86,8 +84,9 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.Parent = TitleBar
 
+
 local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, -20, 0, 18)
+Status.Size = UDim2.new(0.48, -20, 0, 18)
 Status.Position = UDim2.new(0, 10, 0, 36)
 Status.BackgroundTransparency = 1
 Status.Text = "Auto Parry OFF"
@@ -97,8 +96,30 @@ Status.Font = Enum.Font.GothamSemibold
 Status.TextXAlignment = Enum.TextXAlignment.Left
 Status.Parent = MainFrame
 
+local ToggleFrame = Instance.new("Frame")
+ToggleFrame.Size = UDim2.new(0, 36, 0, 18)
+ToggleFrame.Position = UDim2.new(0.48, -55, 0, 36)
+ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+ToggleFrame.BorderSizePixel = 0
+ToggleFrame.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleFrame
+
+local ToggleCircle = Instance.new("Frame")
+ToggleCircle.Size = UDim2.new(0, 14, 0, 14)
+ToggleCircle.Position = UDim2.new(0, 2, 0.5, -7)
+ToggleCircle.BackgroundColor3 = Color3.fromRGB(220, 220, 230)
+ToggleCircle.BorderSizePixel = 0
+ToggleCircle.Parent = ToggleFrame
+
+local CircleCorner = Instance.new("UICorner")
+CircleCorner.CornerRadius = UDim.new(1, 0)
+CircleCorner.Parent = ToggleCircle
+
 local BindLabel = Instance.new("TextButton")
-BindLabel.Size = UDim2.new(1, -20, 0, 28)
+BindLabel.Size = UDim2.new(0.48, -20, 0, 28)
 BindLabel.Position = UDim2.new(0, 10, 0, 60)
 BindLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 BindLabel.Text = "Toggle Key: R"
@@ -118,7 +139,7 @@ BindCorner.CornerRadius = UDim.new(0, 8)
 BindCorner.Parent = BindLabel
 
 local DistanceLabel = Instance.new("TextLabel")
-DistanceLabel.Size = UDim2.new(1, -20, 0, 18)
+DistanceLabel.Size = UDim2.new(0.48, -20, 0, 18)
 DistanceLabel.Position = UDim2.new(0, 10, 0, 94)
 DistanceLabel.BackgroundTransparency = 1
 DistanceLabel.Text = "Distance: 6.5"
@@ -140,7 +161,7 @@ MinusBtn.Parent = MainFrame
 
 local PlusBtn = Instance.new("TextButton")
 PlusBtn.Size = UDim2.new(0, 40, 0, 28)
-PlusBtn.Position = UDim2.new(1, -55, 0, 118)
+PlusBtn.Position = UDim2.new(0.48, -65, 0, 118)
 PlusBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 PlusBtn.Text = "+"
 PlusBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
@@ -148,9 +169,8 @@ PlusBtn.TextSize = 20
 PlusBtn.Font = Enum.Font.GothamBold
 PlusBtn.Parent = MainFrame
 
-
 local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(1, -20, 0, 18)
+SpeedLabel.Size = UDim2.new(0.48, -20, 0, 18)
 SpeedLabel.Position = UDim2.new(0, 10, 0, 152)
 SpeedLabel.BackgroundTransparency = 1
 SpeedLabel.Text = "Speed: 0.5"
@@ -172,7 +192,7 @@ SpeedMinusBtn.Parent = MainFrame
 
 local SpeedPlusBtn = Instance.new("TextButton")
 SpeedPlusBtn.Size = UDim2.new(0, 40, 0, 28)
-SpeedPlusBtn.Position = UDim2.new(1, -55, 0, 176)
+SpeedPlusBtn.Position = UDim2.new(0.48, -65, 0, 176)
 SpeedPlusBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 SpeedPlusBtn.Text = "+"
 SpeedPlusBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
@@ -182,7 +202,7 @@ SpeedPlusBtn.Parent = MainFrame
 
 local SpeedToggleFrame = Instance.new("Frame")
 SpeedToggleFrame.Size = UDim2.new(0, 36, 0, 18)
-SpeedToggleFrame.Position = UDim2.new(1, -48, 0, 152)
+SpeedToggleFrame.Position = UDim2.new(0.48, -55, 0, 152)
 SpeedToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 SpeedToggleFrame.BorderSizePixel = 0
 SpeedToggleFrame.Parent = MainFrame
@@ -202,9 +222,8 @@ local SpeedToggleCircleCorner = Instance.new("UICorner")
 SpeedToggleCircleCorner.CornerRadius = UDim.new(1, 0)
 SpeedToggleCircleCorner.Parent = SpeedToggleCircle
 
-
 local TimeLabel = Instance.new("TextLabel")
-TimeLabel.Size = UDim2.new(1, -20, 0, 18)
+TimeLabel.Size = UDim2.new(0.48, -20, 0, 18)
 TimeLabel.Position = UDim2.new(0, 10, 0, 210)
 TimeLabel.BackgroundTransparency = 1
 TimeLabel.Text = "Time of Day"
@@ -226,7 +245,7 @@ DayBtn.Parent = MainFrame
 
 local NightBtn = Instance.new("TextButton")
 NightBtn.Size = UDim2.new(0, 75, 0, 28)
-NightBtn.Position = UDim2.new(1, -90, 0, 234)
+NightBtn.Position = UDim2.new(0.48, -90, 0, 234)
 NightBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 NightBtn.Text = "Night"
 NightBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
@@ -235,7 +254,7 @@ NightBtn.Font = Enum.Font.GothamBold
 NightBtn.Parent = MainFrame
 
 local NoclipLabel = Instance.new("TextLabel")
-NoclipLabel.Size = UDim2.new(1, -20, 0, 18)
+NoclipLabel.Size = UDim2.new(0.48, -20, 0, 18)
 NoclipLabel.Position = UDim2.new(0, 10, 0, 268)
 NoclipLabel.BackgroundTransparency = 1
 NoclipLabel.Text = "NoClip"
@@ -246,7 +265,7 @@ NoclipLabel.TextXAlignment = Enum.TextXAlignment.Left
 NoclipLabel.Parent = MainFrame
 
 local NoclipBtn = Instance.new("TextButton")
-NoclipBtn.Size = UDim2.new(0, 160, 0, 28)
+NoclipBtn.Size = UDim2.new(0.48, -30, 0, 28)
 NoclipBtn.Position = UDim2.new(0, 15, 0, 292)
 NoclipBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 NoclipBtn.Text = "NoClip OFF"
@@ -256,7 +275,7 @@ NoclipBtn.Font = Enum.Font.GothamBold
 NoclipBtn.Parent = MainFrame
 
 local FarmLabel = Instance.new("TextLabel")
-FarmLabel.Size = UDim2.new(1, -20, 0, 18)
+FarmLabel.Size = UDim2.new(0.48, -20, 0, 18)
 FarmLabel.Position = UDim2.new(0, 10, 0, 326)
 FarmLabel.BackgroundTransparency = 1
 FarmLabel.Text = "Auto Farm Boss"
@@ -267,7 +286,7 @@ FarmLabel.TextXAlignment = Enum.TextXAlignment.Left
 FarmLabel.Parent = MainFrame
 
 local FarmBtn = Instance.new("TextButton")
-FarmBtn.Size = UDim2.new(0, 160, 0, 28)
+FarmBtn.Size = UDim2.new(0.48, -30, 0, 28)
 FarmBtn.Position = UDim2.new(0, 15, 0, 350)
 FarmBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 FarmBtn.Text = "Farm OFF"
@@ -275,6 +294,41 @@ FarmBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
 FarmBtn.TextSize = 16
 FarmBtn.Font = Enum.Font.GothamBold
 FarmBtn.Parent = MainFrame
+
+
+local TPLabel = Instance.new("TextLabel")
+TPLabel.Size = UDim2.new(0.48, -20, 0, 18)
+TPLabel.Position = UDim2.new(0.5, 10, 0, 36)
+TPLabel.BackgroundTransparency = 1
+TPLabel.Text = "Player TP"
+TPLabel.TextColor3 = Color3.fromRGB(255, 200, 220)
+TPLabel.TextSize = 14
+TPLabel.Font = Enum.Font.GothamSemibold
+TPLabel.TextXAlignment = Enum.TextXAlignment.Left
+TPLabel.Parent = MainFrame
+
+local TPScroll = Instance.new("ScrollingFrame")
+TPScroll.Size = UDim2.new(0.48, -20, 0, 300)
+TPScroll.Position = UDim2.new(0.5, 10, 0, 60)
+TPScroll.BackgroundTransparency = 1
+TPScroll.BorderSizePixel = 0
+TPScroll.ScrollBarThickness = 5
+TPScroll.Parent = MainFrame
+
+local TPListLayout = Instance.new("UIListLayout")
+TPListLayout.Padding = UDim.new(0, 4)
+TPListLayout.Parent = TPScroll
+
+local RefreshTPBtn = Instance.new("TextButton")
+RefreshTPBtn.Size = UDim2.new(0, 100, 0, 28)
+RefreshTPBtn.Position = UDim2.new(0.5, 10, 0, 370)
+RefreshTPBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+RefreshTPBtn.Text = "🔄 Обновить"
+RefreshTPBtn.TextColor3 = Color3.fromRGB(255, 120, 190)
+RefreshTPBtn.TextSize = 14
+RefreshTPBtn.Font = Enum.Font.GothamBold
+RefreshTPBtn.Parent = MainFrame
+
 
 local function StyleButton(btn)
     local s = Instance.new("UIStroke")
@@ -297,6 +351,48 @@ StyleButton(NightBtn)
 StyleButton(NoclipBtn)
 StyleButton(FarmBtn)
 StyleButton(BindLabel)
+StyleButton(RefreshTPBtn)
+
+
+local function teleportTo(targetPlayer)
+    local targetChar = targetPlayer.Character
+    local myChar = player.Character
+    if targetChar and targetChar:FindFirstChild("HumanoidRootPart") and myChar and myChar:FindFirstChild("HumanoidRootPart") then
+        myChar.HumanoidRootPart.CFrame = targetChar.HumanoidRootPart.CFrame * CFrame.new(3, 2, 0)
+        Notify("🚀 TP", "К " .. targetPlayer.DisplayName)
+    end
+end
+
+local function updatePlayerList()
+    for _, child in pairs(TPScroll:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 30)
+            btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            btn.Text = p.DisplayName
+            btn.TextColor3 = Color3.fromRGB(255, 200, 220)
+            btn.TextSize = 14
+            btn.Font = Enum.Font.GothamSemibold
+            btn.Parent = TPScroll
+            StyleButton(btn)
+            
+            btn.MouseButton1Click:Connect(function()
+                teleportTo(p)
+            end)
+            btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55) end)
+            btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0) end)
+        end
+    end
+    TPScroll.CanvasSize = UDim2.new(0, 0, 0, TPListLayout.AbsoluteContentSize.Y + 10)
+end
+
+RefreshTPBtn.MouseButton1Click:Connect(updatePlayerList)
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+
 
 local function UpdateDistanceLabel()
     DistanceLabel.Text = string.format("Distance: %.1f", DistanceThreshold)
@@ -320,7 +416,6 @@ local function UpdateFarmLabel()
     FarmBtn.TextColor3 = TeleportEnabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 120, 190)
 end
 
-
 local function CreatePlatform(pos)
     local platform = Instance.new("Part")
     platform.Name = "TempPlatform"
@@ -332,21 +427,17 @@ local function CreatePlatform(pos)
     platform.Color = Color3.fromRGB(255, 120, 190)
     platform.Material = Enum.Material.Neon
     platform.Parent = workspace
-    
     task.delay(1.5, function()
         if platform and platform.Parent then platform:Destroy() end
     end)
 end
 
-
 local function ToggleFarm()
     TeleportEnabled = not TeleportEnabled
-    
     if TeleportEnabled then
-        OriginalDistance = DistanceThreshold          
-        DistanceThreshold = 9.5                       
+        OriginalDistance = DistanceThreshold
+        DistanceThreshold = 9.5
         UpdateDistanceLabel()
-        
         TeleportConnection = RunService.Heartbeat:Connect(function()
             if TeleportEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = player.Character.HumanoidRootPart
@@ -356,9 +447,8 @@ local function ToggleFarm()
         end)
         Notify("vvil_NIX", "Auto Farm Boss ON (Distance: 9.5)")
     else
-        DistanceThreshold = OriginalDistance          
+        DistanceThreshold = OriginalDistance
         UpdateDistanceLabel()
-        
         if TeleportConnection then
             TeleportConnection:Disconnect()
             TeleportConnection = nil
@@ -369,8 +459,6 @@ local function ToggleFarm()
 end
 
 FarmBtn.MouseButton1Click:Connect(ToggleFarm)
-
-
 
 MinusBtn.MouseButton1Click:Connect(function()
     DistanceThreshold = math.max(1, DistanceThreshold - 0.1)
@@ -461,93 +549,6 @@ BindLabel.MouseButton1Click:Connect(function()
     BindLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 end)
 
-
-local ToggleFrame = Instance.new("Frame")
-ToggleFrame.Size = UDim2.new(0, 36, 0, 18)
-ToggleFrame.Position = UDim2.new(1, -48, 0, 36)
-ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-ToggleFrame.BorderSizePixel = 0
-ToggleFrame.Parent = MainFrame
-
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(1, 0)
-ToggleCorner.Parent = ToggleFrame
-
-local ToggleCircle = Instance.new("Frame")
-ToggleCircle.Size = UDim2.new(0, 14, 0, 14)
-ToggleCircle.Position = UDim2.new(0, 2, 0.5, -7)
-ToggleCircle.BackgroundColor3 = Color3.fromRGB(220, 220, 230)
-ToggleCircle.BorderSizePixel = 0
-ToggleCircle.Parent = ToggleFrame
-
-local CircleCorner = Instance.new("UICorner")
-CircleCorner.CornerRadius = UDim.new(1, 0)
-CircleCorner.Parent = ToggleCircle
-
-local CursorFolder = Instance.new("Folder")
-CursorFolder.Name = "CustomCursor"
-CursorFolder.Parent = ScreenGui
-
-local Crosshair = Instance.new("Frame")
-Crosshair.Name = "Crosshair"
-Crosshair.Size = UDim2.new(0, 8, 0, 8)
-Crosshair.BackgroundTransparency = 1
-Crosshair.Visible = false
-Crosshair.ZIndex = 10000
-Crosshair.Parent = CursorFolder
-
-local OutlineH = Instance.new("Frame")
-OutlineH.Size = UDim2.new(0, 10, 0, 2)
-OutlineH.Position = UDim2.new(0, -1, 0.5, -1)
-OutlineH.BackgroundColor3 = Color3.fromRGB(255, 105, 180)
-OutlineH.BorderSizePixel = 0
-OutlineH.Parent = Crosshair
-
-local OutlineV = Instance.new("Frame")
-OutlineV.Size = UDim2.new(0, 2, 0, 10)
-OutlineV.Position = UDim2.new(0.5, -1, 0, -1)
-OutlineV.BackgroundColor3 = Color3.fromRGB(255, 105, 180)
-OutlineV.BorderSizePixel = 0
-OutlineV.Parent = Crosshair
-
-local Horizontal = Instance.new("Frame")
-Horizontal.Size = UDim2.new(0, 8, 0, 1)
-Horizontal.Position = UDim2.new(0, 0, 0.5, -0.5)
-Horizontal.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Horizontal.BorderSizePixel = 0
-Horizontal.Parent = Crosshair
-
-local Vertical = Instance.new("Frame")
-Vertical.Size = UDim2.new(0, 1, 0, 8)
-Vertical.Position = UDim2.new(0.5, -0.5, 0, 0)
-Vertical.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Vertical.BorderSizePixel = 0
-Vertical.Parent = Crosshair
-
-local cursorConnection
-
-local function ShowCustomCursor()
-    Crosshair.Visible = true
-    UserInputService.MouseIconEnabled = false
-    if cursorConnection then cursorConnection:Disconnect() end
-    cursorConnection = RunService.RenderStepped:Connect(function()
-        local mousePos = UserInputService:GetMouseLocation()
-        Crosshair.Position = UDim2.new(0, mousePos.X - 3.2, 0, mousePos.Y - 5)
-    end)
-end
-
-local function HideCustomCursor()
-    Crosshair.Visible = false
-    UserInputService.MouseIconEnabled = true
-    if cursorConnection then
-        cursorConnection:Disconnect()
-        cursorConnection = nil
-    end
-end
-
-MainFrame.MouseEnter:Connect(ShowCustomCursor)
-MainFrame.MouseLeave:Connect(HideCustomCursor)
-
 local function UpdateToggle()
     if Is_Enabled then
         Status.Text = "Auto Parry ON"
@@ -569,6 +570,7 @@ ToggleFrame.InputBegan:Connect(function(input)
         Notify("vvil_NIX", Is_Enabled and "Auto Parry ON" or "Auto Parry OFF")
     end
 end)
+
 
 local dragging = false
 local dragStart, startPos
@@ -701,7 +703,6 @@ runService.Heartbeat:Connect(function()
     end
 end)
 
-
 UpdateToggle()
 UpdateDistanceLabel()
 UpdateSpeedLabel()
@@ -709,4 +710,6 @@ UpdateBindLabel()
 UpdateSpeedToggle()
 UpdateNoclipLabel()
 UpdateFarmLabel()
+updatePlayerList()
+
 Notify("")
