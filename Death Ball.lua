@@ -28,6 +28,12 @@ local TeleportEnabled = false
 local TeleportConnection = nil
 local TargetPosition = Vector3.new(721.1123657225652, 328.289306640625, 1476.4405517578125)
 
+-- === НОВАЯ ФУНКЦИЯ АВТОФАРМА ===
+local TeleportEnabled2 = false
+local TeleportConnection2 = nil
+local TargetPosition2 = Vector3.new(570.57, 284.59, -770.59)
+-- =================================
+
 local function Notify(title, text)
     pcall(function()
         StarterGui:SetCore("SendNotification", {
@@ -47,7 +53,7 @@ ScreenGui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
-MainFrame.Size = UDim2.new(0, 400, 0, 400)
+MainFrame.Size = UDim2.new(0, 400, 0, 450)
 MainFrame.Position = UDim2.new(0.5, -230, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
 MainFrame.BackgroundTransparency = 0.5
@@ -295,6 +301,28 @@ FarmBtn.TextSize = 16
 FarmBtn.Font = Enum.Font.GothamBold
 FarmBtn.Parent = MainFrame
 
+-- ==================== НОВЫЙ ФАРМ ====================
+local FarmLabel2 = Instance.new("TextLabel")
+FarmLabel2.Size = UDim2.new(0.48, -20, 0, 18)
+FarmLabel2.Position = UDim2.new(0, 10, 0, 384)
+FarmLabel2.BackgroundTransparency = 1
+FarmLabel2.Text = "Auto Farm 2"
+FarmLabel2.TextColor3 = Color3.fromRGB(255, 200, 220)
+FarmLabel2.TextSize = 14
+FarmLabel2.Font = Enum.Font.GothamSemibold
+FarmLabel2.TextXAlignment = Enum.TextXAlignment.Left
+FarmLabel2.Parent = MainFrame
+
+local FarmBtn2 = Instance.new("TextButton")
+FarmBtn2.Size = UDim2.new(0.48, -30, 0, 28)
+FarmBtn2.Position = UDim2.new(0, 15, 0, 408)
+FarmBtn2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+FarmBtn2.Text = "Farm 2 OFF"
+FarmBtn2.TextColor3 = Color3.fromRGB(255, 120, 190)
+FarmBtn2.TextSize = 16
+FarmBtn2.Font = Enum.Font.GothamBold
+FarmBtn2.Parent = MainFrame
+-- ===================================================
 
 local TPLabel = Instance.new("TextLabel")
 TPLabel.Size = UDim2.new(0.48, -20, 0, 18)
@@ -350,6 +378,7 @@ StyleButton(DayBtn)
 StyleButton(NightBtn)
 StyleButton(NoclipBtn)
 StyleButton(FarmBtn)
+StyleButton(FarmBtn2)  -- новый
 StyleButton(BindLabel)
 StyleButton(RefreshTPBtn)
 
@@ -416,6 +445,12 @@ local function UpdateFarmLabel()
     FarmBtn.TextColor3 = TeleportEnabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 120, 190)
 end
 
+-- === Обновление для второй фермы ===
+local function UpdateFarmLabel2()
+    FarmBtn2.Text = TeleportEnabled2 and "Farm 2 ON" or "Farm 2 OFF"
+    FarmBtn2.TextColor3 = TeleportEnabled2 and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 120, 190)
+end
+
 local function CreatePlatform(pos)
     local platform = Instance.new("Part")
     platform.Name = "TempPlatform"
@@ -458,7 +493,29 @@ local function ToggleFarm()
     UpdateFarmLabel()
 end
 
+local function ToggleFarm2()
+    TeleportEnabled2 = not TeleportEnabled2
+    if TeleportEnabled2 then
+        TeleportConnection2 = RunService.Heartbeat:Connect(function()
+            if TeleportEnabled2 and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                hrp.CFrame = CFrame.new(TargetPosition2 + Vector3.new(0, 4, 0))
+                CreatePlatform(TargetPosition2)
+            end
+        end)
+        Notify("vvil_NIX", "Auto Farm 2 ON")
+    else
+        if TeleportConnection2 then
+            TeleportConnection2:Disconnect()
+            TeleportConnection2 = nil
+        end
+        Notify("vvil_NIX", "Auto Farm 2 OFF")
+    end
+    UpdateFarmLabel2()
+end
+
 FarmBtn.MouseButton1Click:Connect(ToggleFarm)
+FarmBtn2.MouseButton1Click:Connect(ToggleFarm2)  -- новая кнопка
 
 MinusBtn.MouseButton1Click:Connect(function()
     DistanceThreshold = math.max(1, DistanceThreshold - 0.1)
@@ -710,6 +767,7 @@ UpdateBindLabel()
 UpdateSpeedToggle()
 UpdateNoclipLabel()
 UpdateFarmLabel()
+UpdateFarmLabel2()   -- новая
 updatePlayerList()
 
-Notify("")
+Notify("vvil_NIX", "Auto Farm 2 добавлен!")
