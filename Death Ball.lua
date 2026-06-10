@@ -90,6 +90,7 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.Parent = TitleBar
 
+
 local Status = Instance.new("TextLabel")
 Status.Size = UDim2.new(0.48, -20, 0, 18)
 Status.Position = UDim2.new(0, 10, 0, 36)
@@ -356,28 +357,6 @@ RefreshTPBtn.TextSize = 14
 RefreshTPBtn.Font = Enum.Font.GothamBold
 RefreshTPBtn.Parent = MainFrame
 
--- ==================== Кнопка полного отключения ====================
-local DisableLabel = Instance.new("TextLabel")
-DisableLabel.Size = UDim2.new(0.48, -20, 0, 18)
-DisableLabel.Position = UDim2.new(0.5, 10, 0, 404)
-DisableLabel.BackgroundTransparency = 1
-DisableLabel.Text = "Script Control"
-DisableLabel.TextColor3 = Color3.fromRGB(255, 200, 220)
-DisableLabel.TextSize = 14
-DisableLabel.Font = Enum.Font.GothamSemibold
-DisableLabel.TextXAlignment = Enum.TextXAlignment.Left
-DisableLabel.Parent = MainFrame
-
-local DisableBtn = Instance.new("TextButton")
-DisableBtn.Size = UDim2.new(0.48, -30, 0, 28)
-DisableBtn.Position = UDim2.new(0.5, 10, 0, 428)
-DisableBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-DisableBtn.Text = "Disable Script"
-DisableBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
-DisableBtn.TextSize = 16
-DisableBtn.Font = Enum.Font.GothamBold
-DisableBtn.Parent = MainFrame
--- ===================================================
 
 local function StyleButton(btn)
     local s = Instance.new("UIStroke")
@@ -399,34 +378,10 @@ StyleButton(DayBtn)
 StyleButton(NightBtn)
 StyleButton(NoclipBtn)
 StyleButton(FarmBtn)
-StyleButton(FarmBtn2)
+StyleButton(FarmBtn2)  -- новый
 StyleButton(BindLabel)
 StyleButton(RefreshTPBtn)
-StyleButton(DisableBtn)  -- новая кнопка
 
--- ==================== Функция полного отключения ====================
-local function FullyDisableScript()
-    Is_Enabled = false
-    SpeedEnabled = false
-    NoclipEnabled = false
-    TeleportEnabled = false
-    TeleportEnabled2 = false
-
-    if TeleportConnection then TeleportConnection:Disconnect() TeleportConnection = nil end
-    if TeleportConnection2 then TeleportConnection2:Disconnect() TeleportConnection2 = nil end
-    if NoclipConnection then NoclipConnection:Disconnect() NoclipConnection = nil end
-
-    Notify("vvil_NIX", "Script полностью отключён")
-
-    task.delay(0.5, function()
-        if ScreenGui and ScreenGui.Parent then
-            ScreenGui:Destroy()
-        end
-    end)
-end
-
-DisableBtn.MouseButton1Click:Connect(FullyDisableScript)
--- ===================================================
 
 local function teleportTo(targetPlayer)
     local targetChar = targetPlayer.Character
@@ -467,6 +422,7 @@ RefreshTPBtn.MouseButton1Click:Connect(updatePlayerList)
 Players.PlayerAdded:Connect(updatePlayerList)
 Players.PlayerRemoving:Connect(updatePlayerList)
 
+
 local function UpdateDistanceLabel()
     DistanceLabel.Text = string.format("Distance: %.1f", DistanceThreshold)
 end
@@ -489,6 +445,7 @@ local function UpdateFarmLabel()
     FarmBtn.TextColor3 = TeleportEnabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 120, 190)
 end
 
+-- === Обновление для второй фермы ===
 local function UpdateFarmLabel2()
     FarmBtn2.Text = TeleportEnabled2 and "Farm 2 ON" or "Farm 2 OFF"
     FarmBtn2.TextColor3 = TeleportEnabled2 and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(255, 120, 190)
@@ -558,7 +515,7 @@ local function ToggleFarm2()
 end
 
 FarmBtn.MouseButton1Click:Connect(ToggleFarm)
-FarmBtn2.MouseButton1Click:Connect(ToggleFarm2)
+FarmBtn2.MouseButton1Click:Connect(ToggleFarm2)  -- новая кнопка
 
 MinusBtn.MouseButton1Click:Connect(function()
     DistanceThreshold = math.max(1, DistanceThreshold - 0.1)
@@ -670,6 +627,7 @@ ToggleFrame.InputBegan:Connect(function(input)
         Notify("vvil_NIX", Is_Enabled and "Auto Parry ON" or "Auto Parry OFF")
     end
 end)
+
 
 local dragging = false
 local dragStart, startPos
@@ -809,7 +767,7 @@ UpdateBindLabel()
 UpdateSpeedToggle()
 UpdateNoclipLabel()
 UpdateFarmLabel()
-UpdateFarmLabel2()
+UpdateFarmLabel2()   -- новая
 updatePlayerList()
 
 Notify("vvil_NIX", "Auto Farm 2 добавлен!")
